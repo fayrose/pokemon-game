@@ -8,6 +8,8 @@ HEIGHT = 480
 dialog_place = 0  
 l1_textscroller = 1
 l2_textscroller = 0
+name_choose = False
+name = ""
 
 class ImageInfo:
     """
@@ -33,16 +35,23 @@ class Dialog:
         self.dialog = dialog_list
         self.drawing_text = ""
         for i in range(len(self.dialog)):
-            if type(self.dialog[i]) == str:
-                self.dialog[i] = self.dialog[i].upper()
+            self.dialog[i] = self.dialog[i].upper()
                 
     def dialog_handler(self, canvas):
         global dialog_place, l1_textscroller, l2_textscroller, name_choose
-        if dialog_place < len(self.dialog):
+        
+        if dialog_place < len(self.dialog) and self.dialog[dialog_place] != "TRIGGER":
             canvas.draw_text(self.dialog[dialog_place][0:l1_textscroller], [30, 390], 14, "Black", "monospace")
-        if dialog_place + 1 < len(self.dialog):
-            if type(self.dialog[dialog_place + 1]) == str:
-                canvas.draw_text(self.dialog[dialog_place + 1][0:l2_textscroller], [30, 415], 14, "Black", "monospace")
+            
+        if dialog_place + 1 < len(self.dialog) and self.dialog[dialog_place + 1] != "TRIGGER":
+            canvas.draw_text(self.dialog[dialog_place + 1][0:l2_textscroller], [30, 415], 14, "Black", "monospace")
+        
+        if dialog_place < len(self.dialog) and self.dialog[dialog_place] == "TRIGGER":
+			name_choose = True
+            
+        if dialog_place + 1 < len(self.dialog) and self.dialog[dialog_place + 1] == "TRIGGER":
+			name_choose = True
+			
 intro_dialog = ["hi! sorry to keep you waiting.",
                 'welcome to the world of pokemon!',
                'my name is professor birch.',
@@ -51,7 +60,11 @@ intro_dialog = ["hi! sorry to keep you waiting.",
                'this world is widely inhabited by creatures known',
                'as pokemon.',
                'it is my job to research them in order to uncover',
-               'their secrets.']
+               'their secrets.',
+               "and what about you?",
+               "What's your name?",
+               "(Type then press the down arrow to continue)",
+               "trigger"]
 
 introduction_image = simplegui.load_image("http://i.imgur.com/kMGRHzm.jpg")
 introimg_info = ImageInfo([WIDTH / 2, HEIGHT / 2], [WIDTH, HEIGHT], introduction_image)
@@ -66,24 +79,34 @@ explosion_info = ImageInfo([64, 64], [128, 128], explosion_image, True, 24)
 def keydown(key):
     #Keydown Handler
     global dialog_place, l1_textscroller, l2_textscroller, name_choose, name
+    if name_choose:
+		if key == simplegui.KEY_MAP['down']:
+			intro_dialog.append("NICE TO MEET YOU " + name + "!")
+			dialog_place += 1
+			l1_textscroller = 0
+			l2_textscroller = 0
+			name_choose = False
+		else:
+			name += chr(key).upper()
+
     if key == simplegui.KEY_MAP['space']:
         if dialog_place + 1 < len(current_dialog.dialog):
-            if type(current_dialog.dialog[dialog_place + 1]) == str:
-                if l1_textscroller < len(current_dialog.dialog[dialog_place]) or l2_textscroller <= len(current_dialog.dialog[dialog_place + 1]):
-                    l1_textscroller = len(current_dialog.dialog[dialog_place]) - 1
-                    l2_textscroller = len(current_dialog.dialog[dialog_place + 1]) - 1
-                else:
-                    dialog_place += 2
-                    l1_textscroller = 0
-                    l2_textscroller = 0
+			if l1_textscroller < len(current_dialog.dialog[dialog_place]) or l2_textscroller <= len(current_dialog.dialog[dialog_place + 1]):
+				l1_textscroller = len(current_dialog.dialog[dialog_place]) - 1
+				l2_textscroller = len(current_dialog.dialog[dialog_place + 1]) - 1
+			else:
+				dialog_place += 2
+				l1_textscroller = 0
+				l2_textscroller = 0
         else:
             dialog_place += 2
             l1_textscroller = 0
             l2_textscroller = 0
+            
 def name_inp_handler(input):
 	global name, dialog_place, l1_textscroller, l2_textscroller, name_choose
 	name = input
-	dialog_place += 1
+	dialog_place += 2
 	l1_textscroller = 0
 	l2_textscroller = 0
 	name_choose = False
@@ -106,6 +129,8 @@ def draw(canvas):
     introimg_info.draw(canvas, [WIDTH / 2, HEIGHT / 2])
     textbox_info.draw(canvas, [WIDTH / 2, 400])
     current_dialog.dialog_handler(canvas)
+    if name_choose:
+		canvas.draw_text(name, [30, 390], 14, "black", "monospace")
     
 current_dialog = Dialog(intro_dialog)
     
