@@ -43,7 +43,7 @@ pkcmap_info = ImageInfo([325 / 2, 295 / 2], [325, 295], pokecenter_map)
 pokemart_map = simplegui.load_image("http://i.imgur.com/CAlO95H.png")
 pokemart_info = ImageInfo([352 / 2, 264 / 2], [352, 264], pokemart_map)
 
-littleroot_theme = simplegui.load_sound("http://floatzel.net/mp3/Littleroot.mp3")
+littleroot_theme = simplegui.load_sound("https://www.dropbox.com/s/jus36w1y0sfjukr/Littleroot.ogg?dl=1")
 
 background_image = map_image
 background_info = map_info
