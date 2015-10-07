@@ -137,46 +137,38 @@ class Building:
         self.map_info = map_info
         self.map_string = map_string
         
-    def left_border(self):
+    def borders(self):
         global latitude
         if not self.map_end:
             if (latitude == self.left) and (self.moving_object.pos[1] >= self.upper and self.moving_object.pos[1] <= self.lower):
                 self.moving_object.vel[0] = 0
                 latitude -= 1
+                
+            if (latitude == self.right) and (self.moving_object.pos[1] >= self.upper and self.moving_object.pos[1] <= self.lower):
+                self.moving_object.vel[0] = 0
+                latitude += 1
+                
+            if (self.moving_object.pos[1] == self.upper) and (latitude >= self.left) and (latitude <= self.right):  
+                self.moving_object.vel[1] = 0
+                self.moving_object.pos[1] -= 1   
+            
+            if (self.moving_object.pos[1] == self.lower) and (latitude >= self.left) and (latitude <= self.right):  
+                self.moving_object.vel[1] = 0
+                self.moving_object.pos[1] += 1             
+           
         else:
             if self.moving_object.pos[0] == self.left and (self.moving_object.pos[1] >= self.upper and self.moving_object.pos[1] <= self.lower):
                 self.moving_object.vel[0] = 0
                 self.moving_object.pos[0] -= 1
                 
-    def right_border(self):
-        global latitude
-        if not self.map_end:
-            if (latitude == self.right) and (self.moving_object.pos[1] >= self.upper and self.moving_object.pos[1] <= self.lower):
-                self.moving_object.vel[0] = 0
-                latitude += 1
-        else:
             if (self.moving_object.pos[0] == self.right) and (self.moving_object.pos[1] >= self.upper and self.moving_object.pos[1] <= self.lower):
                 self.moving_object.vel[0] = 0
                 self.moving_object.pos[0] += 1
                 
-    def upper_border(self):
-        global latitude
-        if not self.map_end:
-            if (self.moving_object.pos[1] == self.upper) and (latitude >= self.left) and (latitude <= self.right):  
-                self.moving_object.vel[1] = 0
-                self.moving_object.pos[1] -= 1
-        else:
             if (self.moving_object.pos[1] == self.upper) and (self.moving_object.pos[0] >= self.left) and (self.moving_object.pos[0] <= self.right):  
                 self.moving_object.vel[1] = 0
                 self.moving_object.pos[1] -= 1
-                
-    def lower_border(self):
-        global latitude
-        if not self.map_end:
-            if (self.moving_object.pos[1] == self.lower) and (latitude >= self.left) and (latitude <= self.right):  
-                self.moving_object.vel[1] = 0
-                self.moving_object.pos[1] += 1
-        else:
+
             if (self.moving_object.pos[1] == self.lower) and (self.moving_object.pos[0] >= self.left) and (self.moving_object.pos[0] <= self.right):  
                 self.moving_object.vel[1] = 0
                 self.moving_object.pos[1] += 1
@@ -193,13 +185,10 @@ class Building:
                 map_change(self.map, self.map_string, self.map_info, self.moving_object)
                 
 def border_control(building_set):
-    #Recalls the four border controls in the Building Limits Class
+    #Calls border controls in the Building Limits Class
     
     for item in building_set:
-        item.left_border()
-        item.right_border()
-        item.lower_border()
-        item.upper_border()
+        item.borders()
         item.doors()
 
 def map_change(map, map_string, map_info, moving_object):
