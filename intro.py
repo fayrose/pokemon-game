@@ -1,3 +1,8 @@
+"""
+I am having issues running this in normal python - the timers appear not to work. 
+Please see http://www.codeskulptor.org/#user40_eSzMY579k7_5.py for the most recent working version.
+"""
+
 try:
     import simplegui
 except ImportError:
