@@ -107,53 +107,48 @@ class Building:
     """
     Prevents the character from walking on top of buildings, trees, etc.
     """
-    def __init__(self, upper, lower, left, right, door = None, map_end = False, interactive = False, map = None, map_info = None, map_string = None):
+    def __init__(self, borders, map_end = False, door = None, interactive = False, map_change_info = []):
         global character
-        self.upper = upper
-        self.lower = lower
-        self.right = right
-        self.left = left
+        self.borders = borders #upper = self.borders[0], lower = self.borders[1], left = self.borders[2], right = self.borders[3]
         self.moving_object = character
         self.interactive = interactive
         self.map_end = map_end
         self.door = door
-        self.map = map
-        self.map_info = map_info
-        self.map_string = map_string
+        self.map_change_info = map_change_info #map_change_info[0] = map ; map_change_info[1] = map_info ; map_change_info[2] = map_string
         
-    def borders(self):
+    def border_control(self):
         global latitude
         if not self.map_end:
-            if (latitude == self.left) and (self.moving_object.pos[1] >= self.upper and self.moving_object.pos[1] <= self.lower):
+            if (latitude == self.borders[2]) and (self.moving_object.pos[1] >= self.borders[0] and self.moving_object.pos[1] <= self.borders[1]):
                 self.moving_object.vel[0] = 0
                 latitude -= 1
                 
-            if (latitude == self.right) and (self.moving_object.pos[1] >= self.upper and self.moving_object.pos[1] <= self.lower):
+            if (latitude == self.borders[3]) and (self.moving_object.pos[1] >= self.borders[0] and self.moving_object.pos[1] <= self.borders[1]):
                 self.moving_object.vel[0] = 0
                 latitude += 1
                 
-            if (self.moving_object.pos[1] == self.upper) and (latitude >= self.left) and (latitude <= self.right):  
+            if (self.moving_object.pos[1] == self.borders[0]) and (latitude >= self.borders[2]) and (latitude <= self.borders[3]):  
                 self.moving_object.vel[1] = 0
                 self.moving_object.pos[1] -= 1   
             
-            if (self.moving_object.pos[1] == self.lower) and (latitude >= self.left) and (latitude <= self.right):  
+            if (self.moving_object.pos[1] == self.borders[1]) and (latitude >= self.borders[2]) and (latitude <= self.borders[3]):  
                 self.moving_object.vel[1] = 0
                 self.moving_object.pos[1] += 1             
            
         else:
-            if self.moving_object.pos[0] == self.left and (self.moving_object.pos[1] >= self.upper and self.moving_object.pos[1] <= self.lower):
+            if self.moving_object.pos[0] == self.borders[2] and (self.moving_object.pos[1] >= self.borders[0] and self.moving_object.pos[1] <= self.borders[1]):
                 self.moving_object.vel[0] = 0
                 self.moving_object.pos[0] -= 1
                 
-            if (self.moving_object.pos[0] == self.right) and (self.moving_object.pos[1] >= self.upper and self.moving_object.pos[1] <= self.lower):
+            if (self.moving_object.pos[0] == self.borders[3]) and (self.moving_object.pos[1] >= self.borders[0] and self.moving_object.pos[1] <= self.borders[1]):
                 self.moving_object.vel[0] = 0
                 self.moving_object.pos[0] += 1
                 
-            if (self.moving_object.pos[1] == self.upper) and (self.moving_object.pos[0] >= self.left) and (self.moving_object.pos[0] <= self.right):  
+            if (self.moving_object.pos[1] == self.borders[0]) and (self.moving_object.pos[0] >= self.borders[2]) and (self.moving_object.pos[0] <= self.borders[3]):  
                 self.moving_object.vel[1] = 0
                 self.moving_object.pos[1] -= 1
 
-            if (self.moving_object.pos[1] == self.lower) and (self.moving_object.pos[0] >= self.left) and (self.moving_object.pos[0] <= self.right):  
+            if (self.moving_object.pos[1] == self.borders[1]) and (self.moving_object.pos[0] >= self.borders[2]) and (self.moving_object.pos[0] <= self.borders[3]):  
                 self.moving_object.vel[1] = 0
                 self.moving_object.pos[1] += 1
                 
@@ -161,18 +156,18 @@ class Building:
         #Sets the doors of buildings to change maps
         global latitude, background_image, background_info, current_background
         if not self.map_end and self.door != None and self.interactive == False:
-            if (self.moving_object.pos[1] == (self.lower + 1) or self.moving_object.pos[1] == (self.lower - 1)) and (latitude >= self.door[0]) and (latitude <= self.door[1]):  
-                map_change(self.map, self.map_string, self.map_info, self.moving_object)
+            if (self.moving_object.pos[1] == (self.borders[1] + 1) or self.moving_object.pos[1] == (self.borders[1] - 1)) and (latitude >= self.door[0]) and (latitude <= self.door[1]):  
+                map_change(self.map_change_info[0], self.map_change_info[2], self.map_change_info[1], self.moving_object)
         
         elif self.door != None and self.interactive == False:
-            if (self.moving_object.pos[1] == (self.lower + 1) or self.moving_object.pos[1] == (self.lower - 1)) and (self.moving_object.pos[0] >= self.door[0]) and (self.moving_object.pos[0] <= self.door[1]):  
-                map_change(self.map, self.map_string, self.map_info, self.moving_object)
-                
+            if (self.moving_object.pos[1] == (self.borders[1] + 1) or self.moving_object.pos[1] == (self.borders[1] - 1)) and (self.moving_object.pos[0] >= self.door[0]) and (self.moving_object.pos[0] <= self.door[1]):  
+                map_change(self.map_change_info[0], self.map_change_info[2], self.map_change_info[1], self.moving_object)
+        
 def border_control(building_set):
     #Calls border controls in the Building Limits Class
     
     for item in building_set:
-        item.borders()
+        item.border_control()
         item.doors()
 
 def map_change(map, map_string, map_info, moving_object):
@@ -287,6 +282,7 @@ def init():
 	global center_counter, center_exit, center_building_set
 	global mart_table, mart_counter, mart_exit, mart_building_set, current_background, background_image
 	global background_info, current_sound, latitude, outside_location, timer
+	
 	#initializes the ImageInfo classes of the images
 	map_info = ImageInfo([240, 240], [480, 480], loader.get_image("map_image"))
 	character_info = ImageInfo([32, 32], [64, 64], loader.get_image("character_image"))	
@@ -297,23 +293,23 @@ def init():
 	character = Character(loader.get_image("character_image"), character_info)
 
 	#Buildings on the main map
-	four_trees = Building(BORDERS[0], 138, 375, 490)
-	pokecenter = Building(69, 172, 541, 658, [587, 593], False, False, loader.get_image("pokecenter_map"), pkcmap_info, "center")
-	house = Building(236, 348, 541, 661, [616, 625])
-	gym = Building(247, 357, 265, 410, [342, 353], True)
-	pokemart = Building(81, 178, 277, 397, [321, 331], True, False, loader.get_image("pokemart_map"), pokemart_info, "mart")
-	sign = Building(196, 236, 108, 157, None, True, True)
+	four_trees = Building([BORDERS[0], 138, 375, 490])
+	pokecenter = Building([69, 172, 541, 658], False, [587, 593], False, [loader.get_image("pokecenter_map"), pkcmap_info, "center"])
+	house = Building([236, 348, 541, 661], False, [616, 625])
+	gym = Building([247, 357, 265, 410], True, [342, 353])
+	pokemart = Building([81, 178, 277, 397], True, [321, 331], False, [loader.get_image("pokemart_map"), pokemart_info, "mart"])
+	sign = Building([196, 236, 108, 157], True, None, True)
 	map_building_set = set([four_trees, pokecenter, house, gym, pokemart, sign])
 
 	#Pokecenter Buildings
-	center_counter = Building(BORDERS[0], 214, 103, 345, [215, 232], True, True)
-	center_exit = Building(370, 370, 203, 243, [203, 243], True, False, loader.get_image("map_image"), map_info, "map")
+	center_counter = Building([BORDERS[0], 214, 103, 345], True, [215, 232], True)
+	center_exit = Building([370, 370, 203, 243], True, [203, 243], False, [loader.get_image("map_image"), map_info, "map"])
 	center_building_set = set([center_counter, center_exit])
 
 	#Pokemart Buildings
-	mart_table = Building(274, 323, 87, 169, None, True)
-	mart_counter = Building(BORDERS[0], 258, BORDERS[2], 203, [137, 151], True, True)
-	mart_exit = Building(353, 353, 221, 259, [221, 259], True, False, loader.get_image("map_image"), map_info, "map")
+	mart_table = Building([274, 323, 87, 169], True)
+	mart_counter = Building([BORDERS[0], 258, BORDERS[2], 203], True, [137, 151], True)
+	mart_exit = Building([353, 353, 221, 259], True, [221, 259], False, [loader.get_image("map_image"), map_info, "map"])
 	mart_building_set = set([mart_table, mart_counter, mart_exit])
 	
 	#Adds a volume manager
