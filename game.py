@@ -343,14 +343,14 @@ frame = simplegui.create_frame("Pokemon Emerald", WIDTH, HEIGHT)
 
 loader = Loader(frame, WIDTH, init)
 
-loader.add_image("http://i.imgur.com/xIYhInX.jpg", "map_image")
+loader.add_image("http://i.imgur.com/AOGtJXY.jpg", "map_image")
 loader.add_image("http://i.imgur.com/X7rwD5S.png", "character_image")
 loader.add_image("http://i.imgur.com/S55Faqx.jpg", "pokecenter_map")
 loader.add_image("http://i.imgur.com/CAlO95H.png", "pokemart_map")
 loader.add_sound("https://www.dropbox.com/s/jus36w1y0sfjukr/Littleroot.ogg?dl=1", "littleroot_theme")
 
+#loading screen
 loader.load()
-
 loader.wait_loaded()
 
 #Starts the frame
