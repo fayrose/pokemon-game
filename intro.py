@@ -1,8 +1,3 @@
-"""
-I am having issues running this in normal python - the timers appear not to work. 
-Please see http://www.codeskulptor.org/#user40_eSzMY579k7_5.py for the most recent working version.
-"""
-
 try:
     import simplegui
 except ImportError:
@@ -122,7 +117,7 @@ frame.set_draw_handler(draw)
 frame.set_keydown_handler(keydown)
 
 text_timer = simplegui.create_timer(20, text_timer)
-text_timer.start
+text_timer.start()
 
 # Start the frame animation
 frame.start()
