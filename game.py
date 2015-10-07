@@ -1,14 +1,20 @@
 import random
 try:
     import simplegui
+
+    from user40_nMs7JxzimyImAv2 import Loader
+
+    SIMPLEGUICS2PYGAME = False
 except ImportError:
     import SimpleGUICS2Pygame.simpleguics2pygame as simplegui
+
+    from SimpleGUICS2Pygame.simplegui_lib_loader import Loader
    
 
 WIDTH = 480
 HEIGHT = 480
 BORDERS = [35, 407, 59, 422]
-current_background = "map"
+
 
 moving_left = False
 moving_right = False
@@ -31,30 +37,8 @@ class ImageInfo:
     def draw(self, canvas, location):
         canvas.draw_image(self.image, self.center, self.size, location, self.size)
     
-map_image = simplegui.load_image("http://i.imgur.com/xIYhInX.jpg")
-map_info = ImageInfo([240, 240], [480, 480], map_image)
 
-character_image = simplegui.load_image("http://i.imgur.com/X7rwD5S.png")
-character_info = ImageInfo([32, 32], [64, 64], character_image)
 
-pokecenter_map = simplegui.load_image("http://i.imgur.com/S55Faqx.jpg")
-pkcmap_info = ImageInfo([325 / 2, 295 / 2], [325, 295], pokecenter_map)
-
-pokemart_map = simplegui.load_image("http://i.imgur.com/CAlO95H.png")
-pokemart_info = ImageInfo([352 / 2, 264 / 2], [352, 264], pokemart_map)
-
-littleroot_theme = simplegui.load_sound("https://www.dropbox.com/s/jus36w1y0sfjukr/Littleroot.ogg?dl=1")
-
-background_image = map_image
-background_info = map_info
-current_sound = littleroot_theme
-current_sound.play()
-
-#Tracks the placement of the background image for map scrolling
-latitude = background_info.center[0] + background_info.size[0]
-
-#tracks location of the character while inside a building
-outside_location = [latitude, WIDTH / 2, HEIGHT / 2]
 
 class Character:
     """
@@ -205,14 +189,15 @@ def map_change(map, map_string, map_info, moving_object):
         else:
             moving_object.pos[0] = outside_location[1]
             moving_object.pos[1] = outside_location[2]
+        BORDERS = [35, 407, 59, 422]
     else:
-        outside_location = [latitude, moving_object.pos[0], moving_object.pos[1]]
-        moving_object.pos = [WIDTH / 2, background_info.center[1] + (HEIGHT / 2) - 20]
-    
-    BORDERS[0] = (HEIGHT / 2) - background_info.get_center()[1] + 80
-    BORDERS[1] = background_info.get_center()[1] + (HEIGHT / 2)
-    BORDERS[2] = (WIDTH / 2) - background_info.get_center()[0] + 3
-    BORDERS[3] = (WIDTH / 2) + background_info.get_center()[0] - 3   
+		BORDERS[0] = (HEIGHT / 2) - background_info.get_center()[1] + 80
+		BORDERS[1] = background_info.get_center()[1] + (HEIGHT / 2)
+		BORDERS[2] = (WIDTH / 2) - background_info.get_center()[0] + 3
+		BORDERS[3] = (WIDTH / 2) + background_info.get_center()[0] - 3
+		outside_location = [latitude, moving_object.pos[0], moving_object.pos[1]]
+		moving_object.pos = [WIDTH / 2, background_info.center[1] + (HEIGHT / 2) - 20]
+          
             
 def key_down(key):
     #Key down handler; primarily controls movement.
@@ -296,46 +281,81 @@ def draw(canvas):
         border_control(mart_building_set)
 
 
+def init():
+	global character, map_info, character_info, pkcmap_info, pokemart_info
+	global map_building_set, four_trees, pokecenter, house, gym, pokemart, sign
+	global center_counter, center_exit, center_building_set
+	global mart_table, mart_counter, mart_exit, mart_building_set, current_background, background_image
+	global background_info, current_sound, latitude, outside_location, timer
+	#initializes the ImageInfo classes of the images
+	map_info = ImageInfo([240, 240], [480, 480], loader.get_image("map_image"))
+	character_info = ImageInfo([32, 32], [64, 64], loader.get_image("character_image"))	
+	pkcmap_info = ImageInfo([325 / 2, 295 / 2], [325, 295], loader.get_image("pokecenter_map"))
+	pokemart_info = ImageInfo([352 / 2, 264 / 2], [352, 264], loader.get_image("pokemart_map"))
 
-#Creates the character
-character = Character(character_image, character_info)
+	#Creates the character
+	character = Character(loader.get_image("character_image"), character_info)
 
-#Buildings on the main map
-four_trees = Building(BORDERS[0], 138, 375, 490)
-pokecenter = Building(69, 172, 541, 658, [587, 593], False, False, pokecenter_map, pkcmap_info, "center")
-house = Building(236, 348, 541, 661, [616, 625])
-gym = Building(247, 357, 265, 410, [342, 353], True)
-pokemart = Building(81, 178, 277, 397, [321, 331], True, False, pokemart_map, pokemart_info, "mart")
-sign = Building(196, 236, 108, 157, None, True, True)
-map_building_set = set([four_trees, pokecenter, house, gym, pokemart, sign])
+	#Buildings on the main map
+	four_trees = Building(BORDERS[0], 138, 375, 490)
+	pokecenter = Building(69, 172, 541, 658, [587, 593], False, False, loader.get_image("pokecenter_map"), pkcmap_info, "center")
+	house = Building(236, 348, 541, 661, [616, 625])
+	gym = Building(247, 357, 265, 410, [342, 353], True)
+	pokemart = Building(81, 178, 277, 397, [321, 331], True, False, loader.get_image("pokemart_map"), pokemart_info, "mart")
+	sign = Building(196, 236, 108, 157, None, True, True)
+	map_building_set = set([four_trees, pokecenter, house, gym, pokemart, sign])
 
-#Pokecenter Buildings
-center_counter = Building(BORDERS[0], 214, 103, 345, [215, 232], True, True)
-center_exit = Building(370, 370, 203, 243, [203, 243], True, False, map_image, map_info, "map")
-center_building_set = set([center_counter, center_exit])
+	#Pokecenter Buildings
+	center_counter = Building(BORDERS[0], 214, 103, 345, [215, 232], True, True)
+	center_exit = Building(370, 370, 203, 243, [203, 243], True, False, loader.get_image("map_image"), map_info, "map")
+	center_building_set = set([center_counter, center_exit])
 
-#Pokemart Buildings
-mart_table = Building(274, 323, 87, 169, None, True)
-mart_counter = Building(BORDERS[0], 258, BORDERS[2], 203, [137, 151], True, True)
-mart_exit = Building(353, 353, 221, 259, [221, 259], True, False, map_image, map_info, "map")
-mart_building_set = set([mart_table, mart_counter, mart_exit])
+	#Pokemart Buildings
+	mart_table = Building(274, 323, 87, 169, None, True)
+	mart_counter = Building(BORDERS[0], 258, BORDERS[2], 203, [137, 151], True, True)
+	mart_exit = Building(353, 353, 221, 259, [221, 259], True, False, loader.get_image("map_image"), map_info, "map")
+	mart_building_set = set([mart_table, mart_counter, mart_exit])
+	
+	#Adds a volume manager
+	frame.add_input("Change Volume (0 to 10):", change_volume, 50)		
+		
+	#Creates the timer
+	timer = simplegui.create_timer(150, timer_handler)
+	
+	#initializes the background image/music
+	current_background = "map"
+	background_image = loader.get_image("map_image")
+	background_info = map_info
+	current_sound = loader.get_sound("littleroot_theme")
+	current_sound.play()
+	
+	#Tracks the placement of the background image for map scrolling
+	latitude = background_info.center[0] + background_info.size[0]
+
+	#tracks location of the character while inside a building
+	outside_location = [latitude, WIDTH / 2, HEIGHT / 2]
+
+
+	#Sets the handlers
+	frame.set_draw_handler(draw)
+	frame.set_keydown_handler(key_down)
+	frame.set_keyup_handler(key_up)
+	
 
 #Creates the window
 frame = simplegui.create_frame("Pokemon Emerald", WIDTH, HEIGHT)
 
-mute_text = "Mute"
-#Creates the buttons
-frame.add_input("Change Volume (0 to 10)", change_volume, 50)
-#frame.add_button("Increase Volume", increase_volume)
-#frame.add_button(mute_text, mute)
+loader = Loader(frame, WIDTH, init)
 
-#Sets the handlers
-frame.set_draw_handler(draw)
-frame.set_keydown_handler(key_down)
-frame.set_keyup_handler(key_up)
+loader.add_image("http://i.imgur.com/xIYhInX.jpg", "map_image")
+loader.add_image("http://i.imgur.com/X7rwD5S.png", "character_image")
+loader.add_image("http://i.imgur.com/S55Faqx.jpg", "pokecenter_map")
+loader.add_image("http://i.imgur.com/CAlO95H.png", "pokemart_map")
+loader.add_sound("https://www.dropbox.com/s/jus36w1y0sfjukr/Littleroot.ogg?dl=1", "littleroot_theme")
 
-#Creates the timer
-timer = simplegui.create_timer(150, timer_handler)
+loader.load()
+
+loader.wait_loaded()
 
 #Starts the frame
 frame.start()
