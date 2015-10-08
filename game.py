@@ -94,7 +94,6 @@ class Loader:
         size = 30
         
         canvas.draw_image(self.background_screen, [WIDTH / 2, HEIGHT / 2], [WIDTH, HEIGHT], [WIDTH / 2, HEIGHT / 2], [WIDTH, HEIGHT])
-        
         if (self._progression_bar_width > 0) and (nb > 0):
             percent = (self.get_nb_images_loaded()
                        + self.get_nb_sounds_loaded())*100.0/nb
@@ -687,6 +686,7 @@ def intro_keydown(key):
     if name_choose:
         if key == simplegui.KEY_MAP['down']:
             intro_dialog.append("NICE TO MEET YOU " + name + "!")
+            intro_dialog.append("GET READY TO ENTER THE WORLD OF POKEMON!")
             dialog_place += 1
             l1_textscroller = 0
             l2_textscroller = 0
