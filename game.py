@@ -58,7 +58,7 @@ class Loader:
     """
 
     def __init__(self, frame, progression_bar_width,
-                 after_function, background_screen = None, backscreen_info = None, max_waiting=5000):
+                 after_function, background_screen = None, max_waiting=5000):
         """
         Set an empty loader.
         :param frame: simplegui.Frame
@@ -78,7 +78,6 @@ class Loader:
         self._after_function = after_function
         self._max_waiting = max_waiting
         self.background_screen = background_screen
-        self.backscreen_info = backscreen_info
         self._images = {}
         self._sounds = {}
 
@@ -93,9 +92,9 @@ class Loader:
         nb = self.get_nb_images() + self.get_nb_sounds()
 
         size = 30
-        if type(self.backscreen_info) == ImageInfo:
-			self.backscreen_info.draw([WIDTH / 2, HEIGHT / 2], [WIDTH, HEIGHT])
-
+        
+        canvas.draw_image(self.background_screen, [WIDTH / 2, HEIGHT / 2], [WIDTH, HEIGHT], [WIDTH / 2, HEIGHT / 2], [WIDTH, HEIGHT])
+        
         if (self._progression_bar_width > 0) and (nb > 0):
             percent = (self.get_nb_images_loaded()
                        + self.get_nb_sounds_loaded())*100.0/nb
@@ -306,7 +305,6 @@ class Loader:
              and (self.get_nb_sounds_loaded() == self.get_nb_sounds()))
                 or (self._max_waiting <= 0)):
             self._after_function()
-
             return
 
         def check_if_loaded():
@@ -463,28 +461,28 @@ class Building:
                 map_change(self.map_change_info[0], self.map_change_info[2], self.map_change_info[1], self.moving_object)
 
 class Dialog:
-	  """
-	  Implements the usage of messages and dialogue throughout the game.
-	  """
+    """
+	Implements the usage of messages and dialogue throughout the game.
+    """
     def __init__(self, dialog_list):
-        self.dialog = dialog_list
-        self.drawing_text = ""
-        for i in range(len(self.dialog)):
-            self.dialog[i] = self.dialog[i].upper()
+		self.dialog = dialog_list
+		self.drawing_text = ""
+		for i in range(len(self.dialog)):
+			self.dialog[i] = self.dialog[i].upper()
                 
     def dialog_handler(self, canvas):
-        global dialog_place, l1_textscroller, l2_textscroller, name_choose
-        
-        if dialog_place < len(self.dialog) and self.dialog[dialog_place] != "TRIGGER":
-            canvas.draw_text(self.dialog[dialog_place][0:l1_textscroller], [30, 390], 14, "Black", "monospace")
+		global dialog_place, l1_textscroller, l2_textscroller, name_choose
+
+		if dialog_place < len(self.dialog) and self.dialog[dialog_place] != "TRIGGER":
+			canvas.draw_text(self.dialog[dialog_place][0:l1_textscroller], [30, 390], 14, "Black", "monospace")
             
-        if dialog_place + 1 < len(self.dialog) and self.dialog[dialog_place + 1] != "TRIGGER":
-            canvas.draw_text(self.dialog[dialog_place + 1][0:l2_textscroller], [30, 415], 14, "Black", "monospace")
+		if dialog_place + 1 < len(self.dialog) and self.dialog[dialog_place + 1] != "TRIGGER":
+			canvas.draw_text(self.dialog[dialog_place + 1][0:l2_textscroller], [30, 415], 14, "Black", "monospace")
         
-        if dialog_place < len(self.dialog) and self.dialog[dialog_place] == "TRIGGER":
+		if dialog_place < len(self.dialog) and self.dialog[dialog_place] == "TRIGGER":
 			name_choose = True
             
-        if dialog_place + 1 < len(self.dialog) and self.dialog[dialog_place + 1] == "TRIGGER":
+		if dialog_place + 1 < len(self.dialog) and self.dialog[dialog_place + 1] == "TRIGGER":
 			name_choose = True
        
 def border_control(building_set):
@@ -600,17 +598,17 @@ def game_draw(canvas):
         border_control(mart_building_set)
 
 def game_init():
-  """
-  Initializes the game itself after character creation
-  """
-  #initialize globals  
+	"""
+    Initializes the game itself after character creation
+    """
+    #initialize globals 
 	global character, map_info, character_info, pkcmap_info, pokemart_info
 	global map_building_set, four_trees, pokecenter, house, gym, pokemart, sign
 	global center_counter, center_exit, center_building_set
 	global mart_table, mart_counter, mart_exit, mart_building_set, current_background, background_image
 	global background_info, current_sound, latitude, outside_location, timer, name
-	
-	#initializes the ImageInfo classes of the images
+    
+    #initializes the ImageInfo classes of the images
 	map_info = ImageInfo([240, 240], [480, 480], game_loader.get_image("map_image"))
 	character_info = ImageInfo([32, 32], [64, 64], game_loader.get_image("character_image"))	
 	pkcmap_info = ImageInfo([325 / 2, 295 / 2], [325, 295], game_loader.get_image("pokecenter_map"))
@@ -780,14 +778,13 @@ def intro_init():
 frame = simplegui.create_frame("Pokemon Emerald", WIDTH, HEIGHT)
 
 title_screen = simplegui.load_image("http://i.imgur.com/9usiau1.jpg")
-title_info = ImageInfo([WIDTH / 2, HEIGHT / 2], [WIDTH, HEIGHT], title_screen)
+current_sound = simplegui.load_sound("https://www.dropbox.com/s/vjgu6y6xect1y0s/Title_Screen.ogg?dl=1")
 
 background_image = title_screen
-background_info = title_info
 
 #loading screen
-game_loader = Loader(frame, WIDTH, game_init, background_image, background_info)
-intro_loader = Loader(frame, WIDTH, intro_init, background_image, background_info)
+game_loader = Loader(frame, WIDTH, game_init, background_image)
+intro_loader = Loader(frame, WIDTH, intro_init, background_image)
 
 #Loads images for the Introduction
 intro_loader.add_image("http://i.imgur.com/kMGRHzm.jpg", "introduction_image")
