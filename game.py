@@ -11,6 +11,7 @@ WIDTH = 480
 HEIGHT = 480
 BORDERS = [35, 407, 59, 422]
 intro_end = False
+dialog = False
 
 moving_left = False
 moving_right = False
@@ -32,7 +33,6 @@ class ImageInfo:
                           
     def draw(self, canvas, location):
         canvas.draw_image(self.image, self.center, self.size, location, self.size)
-
 
 class Loader:
     """
@@ -403,7 +403,7 @@ class Building:
     """
     Prevents the character from walking on top of buildings, trees, etc.
     """
-    def __init__(self, borders, map_end = False, door = None, interactive = False, map_change_info = []):
+    def __init__(self, borders, map_end = False, door = None, interactive = None, map_change_info = []):
         global character
         self.borders = borders #upper = self.borders[0], lower = self.borders[1], left = self.borders[2], right = self.borders[3]
         self.moving_object = character
@@ -450,40 +450,59 @@ class Building:
                 
     def doors(self):
         #Sets the doors of buildings to change maps
-        global latitude, background_image, background_info, current_background
-        if not self.map_end and self.door != None and self.interactive == False:
-            if (self.moving_object.pos[1] == (self.borders[1] + 1) or self.moving_object.pos[1] == (self.borders[1] - 1)) and (latitude >= self.door[0]) and (latitude <= self.door[1]):  
-                map_change(self.map_change_info[0], self.map_change_info[2], self.map_change_info[1], self.moving_object)
-        
-        elif self.door != None and self.interactive == False:
+        global latitude, background_image, background_info, current_background, current_dialog, dialog, dialog_place, l1_textscroller, l2_textscroller
+        if not self.map_end and self.door != None:
             if (self.moving_object.pos[1] == (self.borders[1] + 1) or self.moving_object.pos[1] == (self.borders[1] - 1)) and (self.moving_object.pos[0] >= self.door[0]) and (self.moving_object.pos[0] <= self.door[1]):  
-                map_change(self.map_change_info[0], self.map_change_info[2], self.map_change_info[1], self.moving_object)
-
+				if self.interactive == None:
+					map_change(self.map_change_info[0], self.map_change_info[2], self.map_change_info[1], self.moving_object)
+				else:
+					current_dialog = Dialog(self.interactive)
+					dialog_place = 0
+					dialog = True
+					
+            elif self.interactive != None:
+				dialog_place = 0
+				dialog = False
+        elif self.door != None:
+            if (self.moving_object.pos[1] == (self.borders[1] + 1) or self.moving_object.pos[1] == (self.borders[1] - 1)) and (self.moving_object.pos[0] >= self.door[0]) and (self.moving_object.pos[0] <= self.door[1]):  
+                if self.interactive == None:
+                    map_change(self.map_change_info[0], self.map_change_info[2], self.map_change_info[1], self.moving_object)
+                else:
+					dialog_place = 0
+					current_dialog = Dialog(self.interactive)
+					dialog = True
+					
+            elif self.interactive != None:
+				dialog_place = 0
+				dialog = False
 class Dialog:
     """
 	Implements the usage of messages and dialogue throughout the game.
     """
     def __init__(self, dialog_list):
 		self.dialog = dialog_list
-		self.drawing_text = ""
+		
 		for i in range(len(self.dialog)):
 			self.dialog[i] = self.dialog[i].upper()
-                
+			l1_textscroller = 1
+			l2_textscroller = 0    
     def dialog_handler(self, canvas):
-		global dialog_place, l1_textscroller, l2_textscroller, name_choose
+		global dialog_place, l1_textscroller, l2_textscroller, name_choose, textbox_info, text_timer
+		if dialog_place < len(self.dialog):
+			textbox_info.draw(canvas, [WIDTH / 2, 400])
+			text_timer.start()
+			if self.dialog[dialog_place] != "TRIGGER":
+				canvas.draw_text(self.dialog[dialog_place][0:l1_textscroller], [30, 390], 14, "Black", "monospace")
+			else:
+				name_choose = True
+		else:
+			text_timer.stop()
+			print dialog_place, len(self.dialog), self.dialog 
+		if dialog_place + 1 < len(self.dialog): 
+			if self.dialog[dialog_place + 1] != "TRIGGER":
+				canvas.draw_text(self.dialog[dialog_place + 1][0:l2_textscroller], [30, 415], 14, "Black", "monospace")
 
-		if dialog_place < len(self.dialog) and self.dialog[dialog_place] != "TRIGGER":
-			canvas.draw_text(self.dialog[dialog_place][0:l1_textscroller], [30, 390], 14, "Black", "monospace")
-            
-		if dialog_place + 1 < len(self.dialog) and self.dialog[dialog_place + 1] != "TRIGGER":
-			canvas.draw_text(self.dialog[dialog_place + 1][0:l2_textscroller], [30, 415], 14, "Black", "monospace")
-        
-		if dialog_place < len(self.dialog) and self.dialog[dialog_place] == "TRIGGER":
-			name_choose = True
-            
-		if dialog_place + 1 < len(self.dialog) and self.dialog[dialog_place + 1] == "TRIGGER":
-			name_choose = True
-       
+
 def border_control(building_set):
     #Calls border controls in the Building Limits Class
     
@@ -516,7 +535,7 @@ def map_change(map, map_string, map_info, moving_object):
                      
 def game_key_down(key):
     #Key down handler; primarily controls movement.
-    global latitude, moving_left, moving_right
+    global latitude, moving_left, moving_right, dialog, dialog_place, l1_textscroller, l2_textscroller
     timer.start()
     if key == simplegui.KEY_MAP['left']:
         moving_left = True
@@ -526,6 +545,10 @@ def game_key_down(key):
         character.walk_up()
     if key == simplegui.KEY_MAP['down']:
         character.walk_down()   
+    if key == simplegui.KEY_MAP['space'] and dialog:
+		dialog_place += 2
+		l1_textscroller = 1
+		l2_textscroller = 0
 
 def game_key_up(key):
     #Stops walking animation and stops movement.
@@ -556,7 +579,7 @@ def change_volume(new_vol):
 def game_draw(canvas):
     #Decides between map scrolling and character movement based on character position.
     #Also controls display of text and images
-    global latitude, moving_left, moving_right, current_background
+    global latitude, moving_left, moving_right, current_background, dialog, current_dialog, text_timer, dialog_place
     
     #Displays the current map and coordinates
     if current_background == "map":    
@@ -570,6 +593,11 @@ def game_draw(canvas):
     #Draws and updates the location and orientation of the character
     character.draw(canvas)
     character.update()
+    
+    print current_dialog.dialog, len(current_dialog.dialog), dialog_place, dialog
+    if dialog:
+        current_dialog.dialog_handler(canvas)
+        text_timer.start()
     
     #Controls whether the character moves itself or the map scrolls
     if moving_left and (latitude > background_info.center[0]) and (character.pos[0] == WIDTH / 2) and (current_background == "map"):
@@ -603,7 +631,7 @@ def game_init():
     #initialize globals 
 	global character, map_info, character_info, pkcmap_info, pokemart_info
 	global map_building_set, four_trees, pokecenter, house, gym, pokemart, sign
-	global center_counter, center_exit, center_building_set
+	global center_counter, center_exit, center_building_set, sign_dialog
 	global mart_table, mart_counter, mart_exit, mart_building_set, current_background, background_image
 	global background_info, current_sound, latitude, outside_location, timer, name
     
@@ -618,11 +646,12 @@ def game_init():
 
 	#Buildings on the main map
 	four_trees = Building([BORDERS[0], 138, 375, 490])
-	pokecenter = Building([69, 172, 541, 658], False, [587, 593], False, [game_loader.get_image("pokecenter_map"), pkcmap_info, "center"])
+	pokecenter = Building([69, 172, 541, 658], False, [587, 593], None, [game_loader.get_image("pokecenter_map"), pkcmap_info, "center"])
 	house = Building([236, 348, 541, 661], False, [616, 625])
 	gym = Building([247, 357, 265, 410], True, [342, 353])
-	pokemart = Building([81, 178, 277, 397], True, [321, 331], False, [game_loader.get_image("pokemart_map"), pokemart_info, "mart"])
-	sign = Building([196, 236, 108, 157], True, None, True)
+	pokemart = Building([81, 178, 277, 397], True, [321, 331], None, [game_loader.get_image("pokemart_map"), pokemart_info, "mart"])
+	sign_dialog = ["beware of the tall grass,", "it may be hiding wild pokemon!"]
+	sign = Building([196, 236, 108, 157], True, [108, 157], sign_dialog)
 	map_building_set = set([four_trees, pokecenter, house, gym, pokemart, sign])
 
 	#Pokecenter Buildings
@@ -705,6 +734,7 @@ def intro_keydown(key):
 			game_loader.add_image("http://i.imgur.com/S55Faqx.jpg", "pokecenter_map")
 			game_loader.add_image("http://i.imgur.com/CAlO95H.png", "pokemart_map")
 			game_loader.add_sound("https://www.dropbox.com/s/jus36w1y0sfjukr/Littleroot.ogg?dl=1", "littleroot_theme")
+			text_timer.stop()
 			game_loader.load()
 			game_loader.wait_loaded()
         
@@ -723,7 +753,6 @@ def intro_draw(canvas):
     #Draw handler during the intro
     global background_info, introimg_info, textbox_info, explosion_info
     background_info.draw(canvas, [WIDTH / 2, HEIGHT / 2])
-    textbox_info.draw(canvas, [WIDTH / 2, 400])
     current_dialog.dialog_handler(canvas)
     if name_choose:
 		canvas.draw_text(name, [30, 390], 14, "black", "monospace")
@@ -778,7 +807,6 @@ def intro_init():
 frame = simplegui.create_frame("Pokemon Emerald", WIDTH, HEIGHT)
 
 title_screen = simplegui.load_image("http://i.imgur.com/9usiau1.jpg")
-current_sound = simplegui.load_sound("https://www.dropbox.com/s/vjgu6y6xect1y0s/Title_Screen.ogg?dl=1")
 
 background_image = title_screen
 
