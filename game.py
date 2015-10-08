@@ -763,13 +763,9 @@ def intro_init():
         
     frame.set_draw_handler(intro_draw)
     frame.set_keydown_handler(intro_keydown)
-	
-def load_draw(canvas):
-	background_info.draw(canvas, [WIDTH / 2, HEIGHT / 2])
 
 #Creates the window
 frame = simplegui.create_frame("Pokemon Emerald", WIDTH, HEIGHT)
-frame.set_draw_handler(load_draw)
 
 title_screen = simplegui.load_image("http://i.imgur.com/9usiau1.jpg")
 title_info = ImageInfo([WIDTH / 2, HEIGHT / 2], [WIDTH, HEIGHT], title_screen)
