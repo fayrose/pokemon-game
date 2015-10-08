@@ -15,6 +15,25 @@ intro_end = False
 moving_left = False
 moving_right = False
 
+class ImageInfo:
+    """
+    Processes image information
+    """
+    def __init__(self, center, size, image, animated = False, lifespan = 0):
+        self.center = center
+        self.size = size
+        self.image = image
+
+    def get_center(self):
+        return self.center
+
+    def get_size(self):
+        return self.size
+                          
+    def draw(self, canvas, location):
+        canvas.draw_image(self.image, self.center, self.size, location, self.size)
+
+
 class Loader:
     """
     Slightly modified version of simplegui_lib_loader (December 12, 2013)
@@ -319,24 +338,6 @@ class Loader:
         self._frame.set_draw_handler(self._draw_loading)
         self.__timer = create_timer(Loader._interval, check_if_loaded)
         self.__timer.start()
-
-class ImageInfo:
-    """
-    Processes image information
-    """
-    def __init__(self, center, size, image, animated = False, lifespan = 0):
-        self.center = center
-        self.size = size
-        self.image = image
-
-    def get_center(self):
-        return self.center
-
-    def get_size(self):
-        return self.size
-                          
-    def draw(self, canvas, location):
-        canvas.draw_image(self.image, self.center, self.size, location, self.size)
 
 class Character:
     """
