@@ -463,7 +463,9 @@ class Building:
                 map_change(self.map_change_info[0], self.map_change_info[2], self.map_change_info[1], self.moving_object)
 
 class Dialog:
-	
+	  """
+	  Implements the usage of messages and dialogue throughout the game.
+	  """
     def __init__(self, dialog_list):
         self.dialog = dialog_list
         self.drawing_text = ""
@@ -550,6 +552,7 @@ def timer_handler():
         character.col = 0
 
 def change_volume(new_vol):
+    #Input handler for the volume changer
     global current_sound
     current_sound.set_volume(float(new_vol) / 10)
 
@@ -597,6 +600,10 @@ def game_draw(canvas):
         border_control(mart_building_set)
 
 def game_init():
+  """
+  Initializes the game itself after character creation
+  """
+  #initialize globals  
 	global character, map_info, character_info, pkcmap_info, pokemart_info
 	global map_building_set, four_trees, pokecenter, house, gym, pokemart, sign
 	global center_counter, center_exit, center_building_set
@@ -656,6 +663,7 @@ def game_init():
 	frame.set_keyup_handler(game_key_up)
           
 def name_inp_handler(input):
+  #Controls name input during character creation
 	global name, dialog_place, l1_textscroller, l2_textscroller, name_choose
 	name = input
 	dialog_place += 2
@@ -691,7 +699,9 @@ def intro_keydown(key):
     if key == simplegui.KEY_MAP['space']:
 		Abutton = intro_loader.get_sound("A-button")
 		Abutton.play()
+		
 		if intro_end:
+		  #Stops the intro and loads the main game
 			game_loader.add_image("http://i.imgur.com/AOGtJXY.jpg", "map_image")
 			game_loader.add_image("http://i.imgur.com/X7rwD5S.png", "character_image")
 			game_loader.add_image("http://i.imgur.com/S55Faqx.jpg", "pokecenter_map")
@@ -712,6 +722,7 @@ def intro_keydown(key):
 					l2_textscroller = 0
 
 def intro_draw(canvas):
+    #Draw handler during the intro
     global background_info, introimg_info, textbox_info, explosion_info
     background_info.draw(canvas, [WIDTH / 2, HEIGHT / 2])
     textbox_info.draw(canvas, [WIDTH / 2, 400])
@@ -720,6 +731,7 @@ def intro_draw(canvas):
 		canvas.draw_text(name, [30, 390], 14, "black", "monospace")
 
 def intro_init():
+    #Initializes the introduction
     global current_background,  background_image, background_info, introduction_image, intro_end, name, current_dialog
     global introimg_info, textbox_info, explosion_info, dialog_place, l1_textscroller, l2_textscroller, name_choose
     global text_timer, intro_dialog, current_sound
@@ -777,12 +789,14 @@ background_info = title_info
 game_loader = Loader(frame, WIDTH, game_init, background_image, background_info)
 intro_loader = Loader(frame, WIDTH, intro_init, background_image, background_info)
 
+#Loads images for the Introduction
 intro_loader.add_image("http://i.imgur.com/kMGRHzm.jpg", "introduction_image")
 intro_loader.add_image("http://i.imgur.com/mCAOj2C.jpg", "textbox_image")
 intro_loader.add_image("http://commondatastorage.googleapis.com/codeskulptor-assets/lathrop/explosion_alpha.png", "explosion_image")
 intro_loader.add_sound("https://www.dropbox.com/s/i2rvb057eb0c3ed/A-Button.ogg?dl=1", "A-button")
 intro_loader.add_sound("https://www.dropbox.com/s/gy2q2egsc5n8m8e/Intro.ogg?dl=1", "Welcome")
 
+#Start the loading sequence for the Introduction
 intro_loader.load()
 intro_loader.wait_loaded()
 
