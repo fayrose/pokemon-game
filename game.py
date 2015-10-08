@@ -212,8 +212,7 @@ def map_change(map, map_string, map_info, moving_object):
 		BORDERS[3] = (WIDTH / 2) + background_info.get_center()[0] - 3
 		outside_location = [latitude, moving_object.pos[0], moving_object.pos[1]]
 		moving_object.pos = [WIDTH / 2, background_info.center[1] + (HEIGHT / 2) - 20]
-          
-            
+                     
 def game_key_down(key):
     #Key down handler; primarily controls movement.
     global latitude, moving_left, moving_right
@@ -263,8 +262,8 @@ def game_draw(canvas):
                           background_info.get_size(), background_info.get_center(), background_info.get_size())
     else:
         background_info.draw(canvas, [WIDTH / 2, HEIGHT / 2])
-    canvas.draw_text("Pos: (" + str(character.pos[0]) + ", " + str(character.pos[1]) + ") , Latitude: " + str(latitude), [125, 460], 28, "White")
     
+    canvas.draw_text("Pos: (" + str(character.pos[0]) + ", " + str(character.pos[1]) + ") , Latitude: " + str(latitude), [125, 460], 28, "White")
     
     #Draws and updates the location and orientation of the character
     character.draw(canvas)
@@ -329,10 +328,7 @@ def game_init():
 	mart_table = Building([274, 323, 87, 169], True)
 	mart_counter = Building([BORDERS[0], 258, BORDERS[2], 203], True, [137, 151], True)
 	mart_exit = Building([353, 353, 221, 259], True, [221, 259], False, [game_loader.get_image("map_image"), map_info, "map"])
-	mart_building_set = set([mart_table, mart_counter, mart_exit])
-	
-	#Adds a volume manager
-	frame.add_input("Change Volume (0 to 10):", change_volume, 50)		
+	mart_building_set = set([mart_table, mart_counter, mart_exit])		
 		
 	#Creates the timer
 	timer = simplegui.create_timer(150, timer_handler)
@@ -341,6 +337,7 @@ def game_init():
 	current_background = "map"
 	background_image = game_loader.get_image("map_image")
 	background_info = map_info
+	current_sound.pause()
 	current_sound = game_loader.get_sound("littleroot_theme")
 	current_sound.play()
 	
@@ -355,14 +352,14 @@ def game_init():
 	frame.set_draw_handler(game_draw)
 	frame.set_keydown_handler(game_key_down)
 	frame.set_keyup_handler(game_key_up)
-
-def intro_draw(canvas):
-    global background_info, introimg_info, textbox_info, explosion_info
-    background_info.draw(canvas, [WIDTH / 2, HEIGHT / 2])
-    textbox_info.draw(canvas, [WIDTH / 2, 400])
-    current_dialog.dialog_handler(canvas)
-    if name_choose:
-		canvas.draw_text(name, [30, 390], 14, "black", "monospace")
+          
+def name_inp_handler(input):
+	global name, dialog_place, l1_textscroller, l2_textscroller, name_choose
+	name = input
+	dialog_place += 2
+	l1_textscroller = 0
+	l2_textscroller = 0
+	name_choose = False
 
 def text_timer():
     #every tick add another letter to animate the textboxes
@@ -376,7 +373,7 @@ def text_timer():
             if l2_textscroller <= len(current_dialog.dialog[dialog_place + 1]):
                 l2_textscroller += 1
 
-def intro_keydown(key):
+def intro_keydown(key):	
     #Keydown Handler
     global dialog_place, l1_textscroller, l2_textscroller, name_choose, name, intro_dialog, intro_end
     if name_choose:
@@ -389,43 +386,41 @@ def intro_keydown(key):
             intro_end = True
         else:
 			name += chr(key).upper()
-    if intro_end and key == simplegui.KEY_MAP['space']:
-        game_loader.add_image("http://i.imgur.com/AOGtJXY.jpg", "map_image")
-        game_loader.add_image("http://i.imgur.com/X7rwD5S.png", "character_image")
-        game_loader.add_image("http://i.imgur.com/S55Faqx.jpg", "pokecenter_map")
-        game_loader.add_image("http://i.imgur.com/CAlO95H.png", "pokemart_map")
-        game_loader.add_sound("https://www.dropbox.com/s/jus36w1y0sfjukr/Littleroot.ogg?dl=1", "littleroot_theme")
-        game_loader.load()
-        game_loader.wait_loaded()
-        
-        
-
     if key == simplegui.KEY_MAP['space']:
-        if dialog_place + 1 < len(current_dialog.dialog):
-			if l1_textscroller < len(current_dialog.dialog[dialog_place]) or l2_textscroller <= len(current_dialog.dialog[dialog_place + 1]):
-				l1_textscroller = len(current_dialog.dialog[dialog_place]) - 1
-				l2_textscroller = len(current_dialog.dialog[dialog_place + 1]) - 1
-			else:
-				dialog_place += 2
-				l1_textscroller = 0
-				l2_textscroller = 0
-        else:
-            dialog_place += 2
-            l1_textscroller = 0
-            l2_textscroller = 0
-            
-def name_inp_handler(input):
-	global name, dialog_place, l1_textscroller, l2_textscroller, name_choose
-	name = input
-	dialog_place += 2
-	l1_textscroller = 0
-	l2_textscroller = 0
-	name_choose = False
+		Abutton = intro_loader.get_sound("A-button")
+		Abutton.play()
+		if intro_end:
+			game_loader.add_image("http://i.imgur.com/AOGtJXY.jpg", "map_image")
+			game_loader.add_image("http://i.imgur.com/X7rwD5S.png", "character_image")
+			game_loader.add_image("http://i.imgur.com/S55Faqx.jpg", "pokecenter_map")
+			game_loader.add_image("http://i.imgur.com/CAlO95H.png", "pokemart_map")
+			game_loader.add_sound("https://www.dropbox.com/s/jus36w1y0sfjukr/Littleroot.ogg?dl=1", "littleroot_theme")
+			game_loader.load()
+			game_loader.wait_loaded()
+        
+		else:
+
+			if dialog_place + 1 < len(current_dialog.dialog):
+				if l1_textscroller < len(current_dialog.dialog[dialog_place]) or l2_textscroller <= len(current_dialog.dialog[dialog_place + 1]):
+					l1_textscroller = len(current_dialog.dialog[dialog_place]) - 1
+					l2_textscroller = len(current_dialog.dialog[dialog_place + 1]) - 1
+				else:
+					dialog_place += 2
+					l1_textscroller = 0
+					l2_textscroller = 0
+
+def intro_draw(canvas):
+    global background_info, introimg_info, textbox_info, explosion_info
+    background_info.draw(canvas, [WIDTH / 2, HEIGHT / 2])
+    textbox_info.draw(canvas, [WIDTH / 2, 400])
+    current_dialog.dialog_handler(canvas)
+    if name_choose:
+		canvas.draw_text(name, [30, 390], 14, "black", "monospace")
 
 def intro_init():
     global current_background,  background_image, background_info, introduction_image, intro_end, name, current_dialog
     global introimg_info, textbox_info, explosion_info, dialog_place, l1_textscroller, l2_textscroller, name_choose
-    global text_timer, intro_dialog
+    global text_timer, intro_dialog, current_sound
     introimg_info = ImageInfo([WIDTH / 2, HEIGHT / 2], [WIDTH, HEIGHT], intro_loader.get_image("introduction_image"))
     textbox_info = ImageInfo([460 / 2, 83 / 2], [460, 83], intro_loader.get_image("textbox_image"))
     explosion_info = ImageInfo([64, 64], [128, 128], intro_loader.get_image("explosion_image"), True, 24)
@@ -455,9 +450,15 @@ def intro_init():
                "What's your name?",
                "(Type then press the down arrow to continue)",
                "trigger"]
-               
+    
+    #Sets intial dialog and sounds          
     current_dialog = Dialog(intro_dialog)
-               
+    current_sound = intro_loader.get_sound("Welcome") 
+    current_sound.play()
+     
+    #Adds a volume manager
+    frame.add_input("Change Volume (0 to 10):", change_volume, 50)
+        
     frame.set_draw_handler(intro_draw)
     frame.set_keydown_handler(intro_keydown)
 	
@@ -472,7 +473,8 @@ intro_loader = Loader(frame, WIDTH, intro_init)
 intro_loader.add_image("http://i.imgur.com/kMGRHzm.jpg", "introduction_image")
 intro_loader.add_image("http://i.imgur.com/mCAOj2C.jpg", "textbox_image")
 intro_loader.add_image("http://commondatastorage.googleapis.com/codeskulptor-assets/lathrop/explosion_alpha.png", "explosion_image")
-
+intro_loader.add_sound("https://www.dropbox.com/s/i2rvb057eb0c3ed/A-Button.ogg?dl=1", "A-button")
+intro_loader.add_sound("https://www.dropbox.com/s/gy2q2egsc5n8m8e/Intro.ogg?dl=1", "Welcome")
 intro_loader.load()
 intro_loader.wait_loaded()
 #Starts the frame
