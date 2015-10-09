@@ -11,7 +11,6 @@ WIDTH = 480
 HEIGHT = 480
 BORDERS = [35, 407, 59, 422]
 intro_end = False
-dialog = False
 
 moving_left = False
 moving_right = False
@@ -449,43 +448,35 @@ class Building:
                 self.moving_object.pos[1] += 1
                 
     def doors(self):
-        #Sets the doors of buildings to change maps
+        #Sets the doors of buildings to change maps or to initiate a dialogue sequence
         global latitude, background_image, background_info, current_background, current_dialog, dialog, dialog_place, l1_textscroller, l2_textscroller
+        
         if not self.map_end and self.door != None:
-            if (self.moving_object.pos[1] == (self.borders[1] + 1) or self.moving_object.pos[1] == (self.borders[1] - 1)) and (self.moving_object.pos[0] >= self.door[0]) and (self.moving_object.pos[0] <= self.door[1]):  
+            if (self.moving_object.pos[1] == (self.borders[1] + 1) or self.moving_object.pos[1] == (self.borders[1] - 1)) and (latitude >= self.door[0]) and (latitude <= self.door[1]):  
 				if self.interactive == None:
 					map_change(self.map_change_info[0], self.map_change_info[2], self.map_change_info[1], self.moving_object)
 				else:
 					current_dialog = Dialog(self.interactive)
-					dialog_place = 0
-					dialog = True
 					
-            elif self.interactive != None:
-				dialog_place = 0
-				dialog = False
         elif self.door != None:
             if (self.moving_object.pos[1] == (self.borders[1] + 1) or self.moving_object.pos[1] == (self.borders[1] - 1)) and (self.moving_object.pos[0] >= self.door[0]) and (self.moving_object.pos[0] <= self.door[1]):  
                 if self.interactive == None:
                     map_change(self.map_change_info[0], self.map_change_info[2], self.map_change_info[1], self.moving_object)
                 else:
-					dialog_place = 0
 					current_dialog = Dialog(self.interactive)
-					dialog = True
+
 					
-            elif self.interactive != None:
-				dialog_place = 0
-				dialog = False
 class Dialog:
     """
 	Implements the usage of messages and dialogue throughout the game.
     """
     def __init__(self, dialog_list):
+		global dialog_place, l1_textscroller, l2_textscroller, dialog
 		self.dialog = dialog_list
-		
+		dialog = True
 		for i in range(len(self.dialog)):
 			self.dialog[i] = self.dialog[i].upper()
-			l1_textscroller = 1
-			l2_textscroller = 0    
+ 
     def dialog_handler(self, canvas):
 		global dialog_place, l1_textscroller, l2_textscroller, name_choose, textbox_info, text_timer
 		if dialog_place < len(self.dialog):
@@ -537,6 +528,16 @@ def game_key_down(key):
     #Key down handler; primarily controls movement.
     global latitude, moving_left, moving_right, dialog, dialog_place, l1_textscroller, l2_textscroller
     timer.start()
+    if dialog and key != simplegui.KEY_MAP['space']:
+        dialog = False
+    elif key == simplegui.KEY_MAP['space'] and dialog:
+        dialog_place += 2
+        l1_textscroller = 1
+        l2_textscroller = 0
+    if not dialog:
+		dialog_place = 0
+		l1_textscroller = 1
+		l2_textscroller = 0   
     if key == simplegui.KEY_MAP['left']:
         moving_left = True
     if key == simplegui.KEY_MAP['right']:
@@ -545,10 +546,6 @@ def game_key_down(key):
         character.walk_up()
     if key == simplegui.KEY_MAP['down']:
         character.walk_down()   
-    if key == simplegui.KEY_MAP['space'] and dialog:
-		dialog_place += 2
-		l1_textscroller = 1
-		l2_textscroller = 0
 
 def game_key_up(key):
     #Stops walking animation and stops movement.
@@ -631,7 +628,7 @@ def game_init():
     #initialize globals 
 	global character, map_info, character_info, pkcmap_info, pokemart_info
 	global map_building_set, four_trees, pokecenter, house, gym, pokemart, sign
-	global center_counter, center_exit, center_building_set, sign_dialog
+	global center_counter, center_exit, center_building_set, dialog
 	global mart_table, mart_counter, mart_exit, mart_building_set, current_background, background_image
 	global background_info, current_sound, latitude, outside_location, timer, name
     
@@ -646,23 +643,22 @@ def game_init():
 
 	#Buildings on the main map
 	four_trees = Building([BORDERS[0], 138, 375, 490])
-	pokecenter = Building([69, 172, 541, 658], False, [587, 593], None, [game_loader.get_image("pokecenter_map"), pkcmap_info, "center"])
-	house = Building([236, 348, 541, 661], False, [616, 625])
-	gym = Building([247, 357, 265, 410], True, [342, 353])
+	pokecenter = Building([69, 172, 541, 658], False, [585, 593], None, [game_loader.get_image("pokecenter_map"), pkcmap_info, "center"])
+	house = Building([236, 348, 541, 661], False, [616, 625], ["Under renovation.",  "Please come back later."])
+	gym = Building([247, 357, 265, 410], True, [342, 353], ["You are not ready to battle the gym leader!", "Come back after training some more."])
 	pokemart = Building([81, 178, 277, 397], True, [321, 331], None, [game_loader.get_image("pokemart_map"), pokemart_info, "mart"])
-	sign_dialog = ["beware of the tall grass,", "it may be hiding wild pokemon!"]
-	sign = Building([196, 236, 108, 157], True, [108, 157], sign_dialog)
+	sign = Building([196, 236, 108, 157], True, [108, 157], ["Beware of the tall grass,", "it may be hiding wild pokemon!"])
 	map_building_set = set([four_trees, pokecenter, house, gym, pokemart, sign])
 
 	#Pokecenter Buildings
-	center_counter = Building([BORDERS[0], 214, 103, 345], True, [215, 232], True)
-	center_exit = Building([370, 370, 203, 243], True, [203, 243], False, [game_loader.get_image("map_image"), map_info, "map"])
+	center_counter = Building([BORDERS[0], 214, 103, 345], True, [215, 232], ["Welcome to the Pokemon Center!", "Come back when you have pokemon,", "and I can help them!"])
+	center_exit = Building([370, 370, 203, 243], True, [203, 243], None, [game_loader.get_image("map_image"), map_info, "map"])
 	center_building_set = set([center_counter, center_exit])
 
 	#Pokemart Buildings
 	mart_table = Building([274, 323, 87, 169], True)
-	mart_counter = Building([BORDERS[0], 258, BORDERS[2], 203], True, [137, 151], True)
-	mart_exit = Building([353, 353, 221, 259], True, [221, 259], False, [game_loader.get_image("map_image"), map_info, "map"])
+	mart_counter = Building([BORDERS[0], 258, BORDERS[2], 203], True, [137, 151], ["Welcome to the Pokemart!"])
+	mart_exit = Building([353, 353, 221, 259], True, [221, 259], None, [game_loader.get_image("map_image"), map_info, "map"])
 	mart_building_set = set([mart_table, mart_counter, mart_exit])		
 		
 	#Creates the timer
@@ -682,6 +678,7 @@ def game_init():
 	#tracks location of the character while inside a building
 	outside_location = [latitude, WIDTH / 2, HEIGHT / 2]
 
+	dialog = False
 
 	#Sets the handlers
 	frame.set_draw_handler(game_draw)
