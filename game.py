@@ -620,6 +620,8 @@ def game_draw(canvas):
         border_control(center_building_set)
     elif current_background == "mart":
         border_control(mart_building_set)
+    elif current_background == "gym":
+		border_control(gym_building_set)
 
 def game_init():
 	"""
@@ -627,16 +629,16 @@ def game_init():
     """
     #initialize globals 
 	global character, map_info, character_info, pkcmap_info, pokemart_info
-	global map_building_set, four_trees, pokecenter, house, gym, pokemart, sign
-	global center_counter, center_exit, center_building_set, dialog
-	global mart_table, mart_counter, mart_exit, mart_building_set, current_background, background_image
-	global background_info, current_sound, latitude, outside_location, timer, name
+	global map_building_set, center_building_set, dialog, gym_building_set
+	global mart_building_set, current_background, background_image, BORDERS, name
+	global background_info, current_sound, latitude, outside_location, timer, name, gymmap_info
     
     #initializes the ImageInfo classes of the images
 	map_info = ImageInfo([240, 240], [480, 480], game_loader.get_image("map_image"))
 	character_info = ImageInfo([32, 32], [64, 64], game_loader.get_image("character_image"))	
 	pkcmap_info = ImageInfo([325 / 2, 295 / 2], [325, 295], game_loader.get_image("pokecenter_map"))
 	pokemart_info = ImageInfo([352 / 2, 264 / 2], [352, 264], game_loader.get_image("pokemart_map"))
+	gymmap_info = ImageInfo([289 / 2, 256 / 2], [289, 256], game_loader.get_image("gym map"))
 
 	#Creates the character
 	character = Character(game_loader.get_image("character_image"), character_info, name)
@@ -645,7 +647,7 @@ def game_init():
 	four_trees = Building([BORDERS[0], 138, 375, 490])
 	pokecenter = Building([69, 172, 541, 658], False, [585, 593], None, [game_loader.get_image("pokecenter_map"), pkcmap_info, "center"])
 	house = Building([236, 348, 541, 661], False, [616, 625], ["Under renovation.",  "Please come back later."])
-	gym = Building([247, 357, 265, 410], True, [342, 353], ["You are not ready to battle the gym leader!", "Come back after training some more."])
+	gym = Building([247, 357, 265, 410], True, [342, 353], None, [game_loader.get_image("gym map"), gymmap_info, "gym"])
 	pokemart = Building([81, 178, 277, 397], True, [321, 331], None, [game_loader.get_image("pokemart_map"), pokemart_info, "mart"])
 	sign = Building([196, 236, 108, 157], True, [108, 157], ["Beware of the tall grass,", "it may be hiding wild pokemon!"])
 	map_building_set = set([four_trees, pokecenter, house, gym, pokemart, sign])
@@ -659,7 +661,14 @@ def game_init():
 	mart_table = Building([274, 323, 87, 169], True)
 	mart_counter = Building([BORDERS[0], 258, BORDERS[2], 203], True, [137, 151], ["Welcome to the Pokemart!"])
 	mart_exit = Building([353, 353, 221, 259], True, [221, 259], None, [game_loader.get_image("map_image"), map_info, "map"])
-	mart_building_set = set([mart_table, mart_counter, mart_exit])		
+	mart_building_set = set([mart_table, mart_counter, mart_exit])	
+	
+	#Gym buildings
+	gym_exit = Building([350, 350, 200, 278], True, [200, 259], None, [game_loader.get_image("map_image"), map_info, "map"])
+	gym_stair1 = Building([BORDERS[0], 230, 150, 200], True)
+	gym_stair2 = Building([BORDERS[0], 230, 280, 328], True)
+	norman = Building([193, 196, 234, 246], True, [234, 246], ["Hello " + name + ".", "Come back when you're stronger.", "Then you can battle me!"])
+	gym_building_set = [gym_exit, gym_stair1, gym_stair2, norman]	
 		
 	#Creates the timer
 	timer = simplegui.create_timer(150, timer_handler)
@@ -730,6 +739,7 @@ def intro_keydown(key):
 			game_loader.add_image("http://i.imgur.com/X7rwD5S.png", "character_image")
 			game_loader.add_image("http://i.imgur.com/S55Faqx.jpg", "pokecenter_map")
 			game_loader.add_image("http://i.imgur.com/CAlO95H.png", "pokemart_map")
+			game_loader.add_image("http://i.imgur.com/TmLgJHG.png", "gym map")
 			game_loader.add_sound("https://www.dropbox.com/s/jus36w1y0sfjukr/Littleroot.ogg?dl=1", "littleroot_theme")
 			text_timer.stop()
 			game_loader.load()
@@ -758,7 +768,7 @@ def intro_init():
     #Initializes the introduction
     global current_background,  background_image, background_info, introduction_image, intro_end, name, current_dialog
     global introimg_info, textbox_info, explosion_info, dialog_place, l1_textscroller, l2_textscroller, name_choose
-    global text_timer, intro_dialog, current_sound
+    global text_timer, intro_dialog, current_sound, name
     introimg_info = ImageInfo([WIDTH / 2, HEIGHT / 2], [WIDTH, HEIGHT], intro_loader.get_image("introduction_image"))
     textbox_info = ImageInfo([460 / 2, 83 / 2], [460, 83], intro_loader.get_image("textbox_image"))
     explosion_info = ImageInfo([64, 64], [128, 128], intro_loader.get_image("explosion_image"), True, 24)
@@ -812,7 +822,7 @@ game_loader = Loader(frame, WIDTH, game_init, background_image)
 intro_loader = Loader(frame, WIDTH, intro_init, background_image)
 
 #Loads images for the Introduction
-intro_loader.add_image("http://i.imgur.com/kMGRHzm.jpg", "introduction_image")
+intro_loader.add_image("http://i.imgur.com/t4qlRQW.jpg", "introduction_image")
 intro_loader.add_image("http://i.imgur.com/mCAOj2C.jpg", "textbox_image")
 intro_loader.add_image("http://commondatastorage.googleapis.com/codeskulptor-assets/lathrop/explosion_alpha.png", "explosion_image")
 intro_loader.add_sound("https://www.dropbox.com/s/i2rvb057eb0c3ed/A-Button.ogg?dl=1", "A-button")
