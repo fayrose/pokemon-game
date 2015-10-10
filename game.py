@@ -349,23 +349,23 @@ class Character:
         self.vel = [0, 0]
         self.col = 0
         self.name = name
+        self.speed = 1
     def walk_down(self):
             self.row_number = 0
-            self.vel[1] = 1
+            self.vel[1] = self.speed
 
     def walk_left(self):
         self.row_number = 1
-        self.vel[0] = -1
+        self.vel[0] = -self.speed
         
     def walk_right(self):
         self.row_number = 2
-        self.vel[0] = 1
+        self.vel[0] = self.speed
         
     def walk_up(self):
-        if self.pos[1] >= BORDERS[0]:
-            self.row_number = 3
-            self.vel[1] = -1
-       
+        self.row_number = 3
+        self.vel[1] = -self.speed
+            
     def draw(self, canvas):
         #Ensures the proper subset of the tiled image is shown based on character direction
         canvas.draw_image(self.tiled_image, [self.image_center[0] + self.image_size[0] * self.col,
@@ -451,15 +451,21 @@ class Building:
         #Sets the doors of buildings to change maps or to initiate a dialogue sequence
         global latitude, background_image, background_info, current_background, current_dialog, dialog, dialog_place, l1_textscroller, l2_textscroller
         
-        if not self.map_end and self.door != None:
+        #If the center of the map walking into a door/event sequence
+        if not self.map_end and self.door != None:			
             if (self.moving_object.pos[1] == (self.borders[1] + 1) or self.moving_object.pos[1] == (self.borders[1] - 1)) and (latitude >= self.door[0]) and (latitude <= self.door[1]):  
+				
+				#If not a person, change the map; otherwise initiate a dialog sequence
 				if self.interactive == None:
 					map_change(self.map_change_info[0], self.map_change_info[2], self.map_change_info[1], self.moving_object)
 				else:
 					current_dialog = Dialog(self.interactive)
-					
+		
+		#If at the edge of the map walking into a door/event sequence			
         elif self.door != None:
             if (self.moving_object.pos[1] == (self.borders[1] + 1) or self.moving_object.pos[1] == (self.borders[1] - 1)) and (self.moving_object.pos[0] >= self.door[0]) and (self.moving_object.pos[0] <= self.door[1]):  
+                
+                #If not a person, change the map; otherwise initiate a dialog sequence
                 if self.interactive == None:
                     map_change(self.map_change_info[0], self.map_change_info[2], self.map_change_info[1], self.moving_object)
                 else:
@@ -488,7 +494,6 @@ class Dialog:
 				name_choose = True
 		else:
 			text_timer.stop()
-			print dialog_place, len(self.dialog), self.dialog 
 		if dialog_place + 1 < len(self.dialog): 
 			if self.dialog[dialog_place + 1] != "TRIGGER":
 				canvas.draw_text(self.dialog[dialog_place + 1][0:l2_textscroller], [30, 415], 14, "Black", "monospace")
@@ -527,7 +532,7 @@ def map_change(map, map_string, map_info, moving_object):
 def game_key_down(key):
     #Key down handler; primarily controls movement.
     global latitude, moving_left, moving_right, dialog, dialog_place, l1_textscroller, l2_textscroller
-    timer.start()
+    
     if dialog and key != simplegui.KEY_MAP['space']:
         dialog = False
     elif key == simplegui.KEY_MAP['space'] and dialog:
@@ -540,27 +545,32 @@ def game_key_down(key):
 		l2_textscroller = 0   
     if key == simplegui.KEY_MAP['left']:
         moving_left = True
+        timer.start()
     if key == simplegui.KEY_MAP['right']:
         moving_right = True
+        timer.start()
     if key == simplegui.KEY_MAP['up']:
         character.walk_up()
+        timer.start()
     if key == simplegui.KEY_MAP['down']:
-        character.walk_down()   
+        character.walk_down()  
+        timer.start() 
 
 def game_key_up(key):
     #Stops walking animation and stops movement.
     global moving_left, moving_right
     
-    timer.stop()
-    
     if key == simplegui.KEY_MAP['left']:
         moving_left = False
+        timer.stop()
         character.vel[0] = 0
     if key == simplegui.KEY_MAP['right']:
         moving_right = False
+        timer.stop()
         character.vel[0] = 0
     if key == simplegui.KEY_MAP['up'] or key == simplegui.KEY_MAP['down']:
         character.vel[1] = 0
+        timer.stop()
         
 def timer_handler():
     #Controls walking animation
@@ -591,19 +601,18 @@ def game_draw(canvas):
     character.draw(canvas)
     character.update()
     
-    print current_dialog.dialog, len(current_dialog.dialog), dialog_place, dialog
     if dialog:
         current_dialog.dialog_handler(canvas)
         text_timer.start()
     
     #Controls whether the character moves itself or the map scrolls
-    if moving_left and (latitude > background_info.center[0]) and (character.pos[0] == WIDTH / 2) and (current_background == "map"):
-        latitude -= 1
+    if moving_left and (latitude > background_info.center[0]) and (character.pos[0] == WIDTH / 2 or character.pos[0] == WIDTH / 2 - 1) and (current_background == "map"):
+        latitude -= character.speed
         character.vel[0] = 0
         character.row_number = 1
     
-    elif moving_right and (latitude < (background_info.center[0] + background_info.size[0])) and (character.pos[0] == WIDTH / 2) and (current_background == "map"):
-        latitude += 1
+    elif moving_right and (latitude < (background_info.center[0] + background_info.size[0])) and (character.pos[0] == WIDTH / 2 or character.pos[0] == WIDTH / 2 - 1) and (current_background == "map"):
+        latitude += character.speed
         character.row_number = 2
         character.vel[0] = 0
     
@@ -622,6 +631,8 @@ def game_draw(canvas):
         border_control(mart_building_set)
     elif current_background == "gym":
 		border_control(gym_building_set)
+    elif current_background == "house":
+        border_control(house_building_set)
 
 def game_init():
 	"""
@@ -629,7 +640,7 @@ def game_init():
     """
     #initialize globals 
 	global character, map_info, character_info, pkcmap_info, pokemart_info
-	global map_building_set, center_building_set, dialog, gym_building_set
+	global map_building_set, center_building_set, dialog, gym_building_set, house_building_set
 	global mart_building_set, current_background, background_image, BORDERS, name
 	global background_info, current_sound, latitude, outside_location, timer, name, gymmap_info
     
@@ -639,14 +650,15 @@ def game_init():
 	pkcmap_info = ImageInfo([325 / 2, 295 / 2], [325, 295], game_loader.get_image("pokecenter_map"))
 	pokemart_info = ImageInfo([352 / 2, 264 / 2], [352, 264], game_loader.get_image("pokemart_map"))
 	gymmap_info = ImageInfo([289 / 2, 256 / 2], [289, 256], game_loader.get_image("gym map"))
-
+	house_info = ImageInfo([354 / 2, 270 / 2], [354, 270], game_loader.get_image("house"))
+	
 	#Creates the character
 	character = Character(game_loader.get_image("character_image"), character_info, name)
 
 	#Buildings on the main map
 	four_trees = Building([BORDERS[0], 138, 375, 490])
 	pokecenter = Building([69, 172, 541, 658], False, [585, 593], None, [game_loader.get_image("pokecenter_map"), pkcmap_info, "center"])
-	house = Building([236, 348, 541, 661], False, [616, 625], ["Under renovation.",  "Please come back later."])
+	house = Building([236, 348, 541, 661], False, [616, 625], None , [game_loader.get_image("house"), house_info, "house"])
 	gym = Building([247, 357, 265, 410], True, [342, 353], None, [game_loader.get_image("gym map"), gymmap_info, "gym"])
 	pokemart = Building([81, 178, 277, 397], True, [321, 331], None, [game_loader.get_image("pokemart_map"), pokemart_info, "mart"])
 	sign = Building([196, 236, 108, 157], True, [108, 157], ["Beware of the tall grass,", "it may be hiding wild pokemon!"])
@@ -655,7 +667,8 @@ def game_init():
 	#Pokecenter Buildings
 	center_counter = Building([BORDERS[0], 214, 103, 345], True, [215, 232], ["Welcome to the Pokemon Center!", "Come back when you have pokemon,", "and I can help them!"])
 	center_exit = Building([370, 370, 203, 243], True, [203, 243], None, [game_loader.get_image("map_image"), map_info, "map"])
-	center_building_set = set([center_counter, center_exit])
+	center_pc = Building([BORDERS[0], 174, 346, 361], True, [346, 361], ["Welcome to the Pokemon Center PC.", "Please come back when you have pokemon.", "Then I can store them!"])
+	center_building_set = set([center_counter, center_exit, center_pc])
 
 	#Pokemart Buildings
 	mart_table = Building([274, 323, 87, 169], True)
@@ -669,6 +682,13 @@ def game_init():
 	gym_stair2 = Building([BORDERS[0], 230, 280, 328], True)
 	norman = Building([193, 196, 234, 246], True, [234, 246], ["Hello " + name + ".", "Come back when you're stronger.", "Then you can battle me!"])
 	gym_building_set = [gym_exit, gym_stair1, gym_stair2, norman]	
+	
+	#House buildings
+	house_exit = Building([356, 356, 221, 264], True, [221, 264], None, [game_loader.get_image("map_image"), map_info, "map"])
+	ruby = Building([219, 276, 213, 266], True, [213, 266], ["Hi " + name + "! I'm Ruby!"])
+	house_table = Building([222, 301, 300, 378], True)
+	house_chairs = Building([220, 300, 383, 411], True)
+	house_building_set = [house_exit, ruby, house_table, house_chairs]
 		
 	#Creates the timer
 	timer = simplegui.create_timer(150, timer_handler)
@@ -740,6 +760,7 @@ def intro_keydown(key):
 			game_loader.add_image("http://i.imgur.com/S55Faqx.jpg", "pokecenter_map")
 			game_loader.add_image("http://i.imgur.com/CAlO95H.png", "pokemart_map")
 			game_loader.add_image("http://i.imgur.com/TmLgJHG.png", "gym map")
+			game_loader.add_image("http://i.imgur.com/uo8KFqZ.png", "house")
 			game_loader.add_sound("https://www.dropbox.com/s/jus36w1y0sfjukr/Littleroot.ogg?dl=1", "littleroot_theme")
 			text_timer.stop()
 			game_loader.load()
