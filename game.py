@@ -1,8 +1,6 @@
 import random
 try:
     import simplegui
-
-    SIMPLEGUICS2PYGAME = False
 except ImportError:
     import SimpleGUICS2Pygame.simpleguics2pygame as simplegui
    
@@ -498,9 +496,19 @@ class Dialog:
 			else:
 				self.dialog[dialog_place]()
 
+class Item:
+	def __init__(self, name, effect, price, base_level):
+		self.name = name
+		self.price = price
+		self.effect = effect
+		self.base_level = base_level
+	def __str__(self):
+		return self.name
+	def use(self, pokemon):
+		pass
+		#pokemon.effect[0] += effect[1]	
 def border_control(building_set):
     #Calls border controls in the Building Limits Class
-    
     for item in building_set:
         item.border_control()
         item.doors()
@@ -530,12 +538,10 @@ def map_change(map, map_string, map_info, moving_object):
                      
 def game_key_down(key):
     #Key down handler; primarily controls movement.
-    global latitude, moving_left, moving_right, dialog, dialog_place, l1_textscroller, l2_textscroller, inventory_shown
-    if key == simplegui.KEY_MAP['i']:
-		inventory_shown = True
+    global latitude, moving_left, moving_right, dialog, dialog_place, l1_textscroller, l2_textscroller, inventory_shown, buying, mart_scroll_position, master_items
     if dialog and key != simplegui.KEY_MAP['space']:
-        dialog = False
-    elif key == simplegui.KEY_MAP['space'] and dialog:
+		dialog = False
+    if key == simplegui.KEY_MAP['space'] and dialog:
         dialog_place += 2
         l1_textscroller = 1
         l2_textscroller = 0
@@ -543,18 +549,28 @@ def game_key_down(key):
 		dialog_place = 0
 		l1_textscroller = 1
 		l2_textscroller = 0   
-    if key == simplegui.KEY_MAP['left']:
-        moving_left = True
-        timer.start()
-    if key == simplegui.KEY_MAP['right']:
-        moving_right = True
-        timer.start()
-    if key == simplegui.KEY_MAP['up']:
-        character.walk_up()
-        timer.start()
-    if key == simplegui.KEY_MAP['down']:
-        character.walk_down()  
-        timer.start() 
+    if buying:
+		if key == simplegui.KEY_MAP['x']:
+			buying = False
+		if key == simplegui.KEY_MAP['up']: #and mart_scroll_position > 0:
+			mart_scroll_position -= 1
+		if key == simplegui.KEY_MAP['down']: # and mart_scroll_position < len(master_items) -1:
+			mart_scroll_position += 1 
+    else:
+		if key == simplegui.KEY_MAP['i']:
+			inventory_shown = True
+		if key == simplegui.KEY_MAP['left']:
+			moving_left = True
+			timer.start()
+		elif key == simplegui.KEY_MAP['right']:
+			moving_right = True
+			timer.start()
+		elif key == simplegui.KEY_MAP['up']:
+			character.walk_up()
+			timer.start()
+		elif key == simplegui.KEY_MAP['down']:
+			character.walk_down()  
+			timer.start() 
 
 def game_key_up(key):
     #Stops walking animation and stops movement.
@@ -587,7 +603,10 @@ def choose_name():
 	name_choose = True
 	
 def mart_buying():
-	pass
+	global buying, mart_line_counter, mart_scroll_position
+	mart_line_counter = 0
+	mart_scroll_position = 0
+	buying = True
 	
 def change_volume(new_vol):
     #Input handler for the volume changer
@@ -598,8 +617,8 @@ def change_volume(new_vol):
 def game_draw(canvas):
     #Decides between map scrolling and character movement based on character position.
     #Also controls display of text and images
-    global latitude, moving_left, moving_right, current_background, dialog, current_dialog, text_timer, dialog_place, inventory_shown
-    
+    global latitude, moving_left, moving_right, current_background, dialog, current_dialog, text_timer, dialog_place, inventory_shown, buying, master_items
+    global mart_scroll_position, mart_line_counter
     #Displays the current map and coordinates
     if current_background == "map":    
         canvas.draw_image(background_image, [latitude, background_info.center[1]], 
@@ -641,6 +660,15 @@ def game_draw(canvas):
 		for i in range(len(character.inventory)):
 			canvas.draw_text(character.inventory[i][0], (310, 70 + 20 * i), 14, "Black", 'monospace')
 			canvas.draw_text(str(character.inventory[i][1]), (430, 70 + 20 * i), 14, "Black", 'monospace')
+	
+    if buying:
+		canvas.draw_polygon([(300, 20), (460, 20), (460, 460), (300, 460)], 6, "Black", "White")
+		canvas.draw_text("Mart:", (310, 45), 20, "Black", 'monospace')
+		for item in master_items:
+			canvas.draw_text(str(item), (310, 70 + 20 * mart_line_counter), 14, "Black", 'monospace')
+			canvas.draw_text(str(item.price), (415, 70 + 20 * mart_line_counter), 14, "Black", 'monospace')
+			mart_line_counter += 1
+		canvas.draw_polygon([(310, 55 + mart_scroll_position * 20), (450, 55 + mart_scroll_position * 20), (450, 75 + mart_scroll_position * 20), (310, 75 + mart_scroll_position * 20)], 4, "Black")
     #Controls the borders of objects on screen
     if current_background == "map":    
         border_control(map_building_set)
@@ -659,13 +687,20 @@ def game_init():
     """
     #initialize globals 
 	global character, map_info, character_info, pkcmap_info, pokemart_info, current_volume, inventory_shown
-	global map_building_set, center_building_set, dialog, gym_building_set, house_building_set
+	global map_building_set, center_building_set, dialog, gym_building_set, house_building_set, buying
 	global mart_building_set, current_background, background_image, BORDERS, name, master_items
 	global background_info, current_sound, latitude, outside_location, timer, name, gymmap_info
 	
 	#initializes the master list of items
-	master_items = set(["Potion", "Super Potion", "Pokeball", "Great Ball", "Hyper Potion", "Revive", "Max Revive", "Bicycle"])
-    
+	potion = Item("Potion", ("health", 20), 300, 0)
+	super_potion = Item("Super Potion", ("health", 50), 700, 12)
+	pokeball = Item("Pokeball", ("capture", 1), 200, 0)
+	great_ball = Item("Great Ball", ("capture", 2), 600, 12)
+	hyper_potion = Item("Hyper Potion", ("health", 70), 1200, 23)
+	revive = Item("Revive", ("revive", .5), 1500, 25)
+	max_revive = Item("Max Revive", ("revive", 1), 2000, 30)
+	master_items = [potion, super_potion, hyper_potion, revive, max_revive, pokeball, great_ball]
+						
     #initializes the ImageInfo classes of the images
 	map_info = ImageInfo([240, 240], [480, 480], game_loader.get_image("map_image"))
 	character_info = ImageInfo([32, 32], [64, 64], game_loader.get_image("character_image"))	
@@ -675,7 +710,7 @@ def game_init():
 	house_info = ImageInfo([354 / 2, 270 / 2], [354, 270], game_loader.get_image("house"))
 	
 	#Creates the character
-	character = Character(game_loader.get_image("character_image"), character_info, name, [["Potion", 2], ["Pokeball", 5], ["Revive", 1]])
+	character = Character(game_loader.get_image("character_image"), character_info, name)
 
 	#Buildings on the main map
 	four_trees = Building([BORDERS[0], 138, 375, 490])
@@ -694,7 +729,7 @@ def game_init():
 
 	#Pokemart Buildings
 	mart_table = Building([274, 323, 87, 169], True)
-	mart_counter = Building([BORDERS[0], 258, BORDERS[2], 203], True, [137, 151], ["Welcome to the Pokemart!", "What would you like to buy?", mart_buying])
+	mart_counter = Building([BORDERS[0], 258, BORDERS[2], 203], True, [137, 151], ["What would you like to buy?", mart_buying])
 	mart_exit = Building([353, 353, 221, 259], True, [221, 259], None, [game_loader.get_image("map_image"), map_info, "map"])
 	mart_shelves = Building([204, 321, 376, BORDERS[3]], True)
 	mart_building_set = set([mart_table, mart_counter, mart_exit, mart_shelves])	
@@ -731,9 +766,10 @@ def game_init():
 	#tracks location of the character while inside a building
 	outside_location = [latitude, WIDTH / 2, HEIGHT / 2]
 
-	#Asserts that neither a dialog box nor the inventory screen will be shown at initialization
+	#Asserts that a dialog box, inventory screen, buying screen, etc. will be shown at initialization
 	dialog = False
 	inventory_shown = False
+	buying = False
 	
 	#Sets the handlers
 	frame.set_draw_handler(game_draw)
